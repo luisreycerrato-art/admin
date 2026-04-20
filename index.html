@@ -12,14 +12,17 @@
     body { font-family: sans-serif; background: var(--bg); margin: 0; padding: 10px; }
     .header { background: var(--azul); color: white; padding: 15px; border-radius: 12px; text-align: center; margin-bottom: 10px; }
     .card { background: white; border-radius: 12px; padding: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); margin-bottom: 15px; }
-    .nav-tabs { display: flex; gap: 5px; margin-bottom: 15px; }
-    .tab-btn { background: #ddd; border: none; padding: 10px; border-radius: 8px; flex: 1; font-weight: bold; }
+    .nav-tabs { display: flex; gap: 5px; margin-bottom: 15px; overflow-x: auto; }
+    .tab-btn { background: #ddd; border: none; padding: 10px; border-radius: 8px; flex: 1; font-weight: bold; white-space: nowrap; }
     .active-tab { background: var(--azul); color: white; }
     .cierre-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
     .cierre-item { padding: 15px; border-radius: 12px; color: white; text-align: center; }
     input, select, button { width: 100%; padding: 12px; margin-top: 8px; border-radius: 8px; border: 1px solid #ddd; box-sizing: border-box; font-size: 16px; }
     button { color: white; border: none; font-weight: bold; cursor: pointer; }
     .deuda-card { border-left: 6px solid var(--rojo); padding: 12px; background: #fff; margin-bottom: 10px; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; }
+    table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+    th, td { text-align: left; padding: 8px; border-bottom: 1px solid #eee; font-size: 12px; }
+    .scroll-v { max-height: 250px; overflow-y: auto; }
   </style>
 </head>
 <body>
@@ -30,9 +33,9 @@
 </div>
 
 <div class="nav-tabs">
-  <button id="t-vender" class="tab-btn active-tab" onclick="showTab('vender')">Pedidos</button>
-  <button id="t-deuda" class="tab-btn" onclick="showTab('deuda')">Deudores</button>
-  <button id="t-admin" class="tab-btn" onclick="showTab('admin')">Admin Pro</button>
+  <button id="t-vender" class="tab-btn active-tab" onclick="showTab('vender')">🛒 Pedidos</button>
+  <button id="t-deuda" class="tab-btn" onclick="showTab('deuda')">💰 Deudores</button>
+  <button id="t-admin" class="tab-btn" onclick="showTab('admin')">📊 Admin Pro</button>
 </div>
 
 <div id="v-vender" class="tab-content">
@@ -40,12 +43,12 @@
     <label>👤 Cliente:</label>
     <select id="sel-cliente"></select>
     <label>🔍 Buscar Medicamento:</label>
-    <input type="text" id="bus-prod" placeholder="Nombre..." oninput="filtrarProductos()">
+    <input type="text" id="bus-prod" placeholder="Escriba el nombre..." oninput="filtrarProductos()">
     <div style="display: flex; gap: 8px;">
       <div style="flex: 3;"><select id="sel-prod"></select></div>
       <div style="flex: 1;"><input type="number" id="inp-cant" value="1"></div>
     </div>
-    <button onclick="addCarrito()" style="background: var(--azul); margin-top:10px;">🛒 Añadir</button>
+    <button onclick="addCarrito()" style="background: var(--azul); margin-top:10px;">🛒 Añadir al Pedido</button>
   </div>
   <div class="card">
     <div id="list-carrito"></div>
@@ -70,18 +73,35 @@
 <div id="v-admin" class="tab-content" style="display:none;">
   <div class="card">
     <input type="date" id="filtro-fecha">
-    <button onclick="consultarAdmin()" style="background: var(--azul); margin-top:10px;">📊 Ver Cierre</button>
+    <button onclick="consultarAdmin()" style="background: var(--azul); margin-top:10px;">📊 Consultar Día</button>
   </div>
+  
   <div class="cierre-grid">
     <div class="cierre-item" style="background: var(--azul);"><h4>VENTA</h4><p id="c-venta">0.00</p></div>
     <div class="cierre-item" style="background: var(--verde);"><h4>GANANCIA</h4><p id="c-ganancia">0.00</p></div>
     <div class="cierre-item" style="background: var(--purpura);"><h4>40%</h4><p id="c-40">0.00</p></div>
     <div class="cierre-item" style="background: var(--rosa);"><h4>20%</h4><p id="c-20">0.00</p></div>
   </div>
+
+  <div class="card" style="margin-top:15px; border-left: 5px solid var(--azul);">
+    <h3>📄 Historial de Facturas (Día)</h3>
+    <div class="scroll-v">
+      <table id="tabla-historial">
+        <thead><tr><th>Cliente</th><th>Total</th><th>Estado</th></tr></thead>
+        <tbody id="historial-body"></tbody>
+      </table>
+    </div>
+  </div>
+
   <div class="card" style="margin-top:15px;">
-    <h3>Inventario</h3>
+    <h3>📦 Inventario</h3>
     <button onclick="abrirModalProd()" style="background:var(--verde);">+ Nuevo Producto</button>
-    <div id="tabla-inv" style="font-size:12px; margin-top:10px; overflow-x:auto;"></div>
+    <div class="scroll-v">
+      <table style="width:100%; border-collapse:collapse;">
+        <thead><tr><th>Nombre</th><th>Venta</th><th>Stock</th><th></th></tr></thead>
+        <tbody id="tabla-inv-body"></tbody>
+      </table>
+    </div>
   </div>
 </div>
 
@@ -123,15 +143,16 @@ async function cargarDatos() {
 }
 
 function actualizarUI() {
-  const pOpts = productos.map(p => `<option value="${p.id}">${p.nombre} (S: ${p.stock})</option>`).join('');
-  document.getElementById('sel-prod').innerHTML = pOpts;
+  document.getElementById('sel-prod').innerHTML = productos.map(p => `<option value="${p.id}">${p.nombre} (S: ${p.stock})</option>`).join('');
   document.getElementById('sel-cliente').innerHTML = clientes.map(c => `<option value="${c.nombre}">${c.nombre}</option>`).join('');
   
-  let h = '<table style="width:100%; border-collapse:collapse;"><tr><th>Nombre</th><th>Venta</th><th>S</th><th>Edit</th></tr>';
-  productos.forEach(p => {
-    h += `<tr><td>${p.nombre}</td><td>${p.precio_venta}</td><td style="color:${p.stock<5?'red':'black'}">${p.stock}</td><td><button onclick="editarProd(${p.id})" style="background:var(--azul); padding:2px; font-size:10px; width:auto;">E</button></td></tr>`;
-  });
-  document.getElementById('tabla-inv').innerHTML = h + '</table>';
+  document.getElementById('tabla-inv-body').innerHTML = productos.map(p => `
+    <tr>
+      <td>${p.nombre}</td>
+      <td>L.${p.precio_venta}</td>
+      <td style="color:${p.stock<10?'red':'green'}"><b>${p.stock}</b></td>
+      <td><button onclick="editarProd(${p.id})" style="background:var(--azul); font-size:10px; width:auto; padding:3px 6px;">E</button></td>
+    </tr>`).join('');
 }
 
 function showTab(tab) {
@@ -151,7 +172,7 @@ function addCarrito() {
   const id = document.getElementById('sel-prod').value;
   const cant = parseInt(document.getElementById('inp-cant').value);
   const p = productos.find(x => x.id == id);
-  if(!p || cant > p.stock) return alert("Error en stock");
+  if(!p || cant > p.stock) return alert("Stock insuficiente");
   carrito.push({ ...p, cant, subt: (p.precio_venta || 0) * cant });
   renderCarrito();
 }
@@ -159,13 +180,13 @@ function addCarrito() {
 function renderCarrito() {
   let t = 0; document.getElementById('list-carrito').innerHTML = carrito.map((i, idx) => {
     t += i.subt;
-    return `<div style="padding:5px; border-bottom:1px solid #eee;">${i.nombre} (x${i.cant}) - L.${i.subt.toFixed(2)}</div>`;
+    return `<div style="padding:8px; border-bottom:1px solid #eee;"><b>${i.nombre}</b> (x${i.cant}) - L.${i.subt.toFixed(2)}</div>`;
   }).join('');
   document.getElementById('lbl-total').innerText = t.toFixed(2);
 }
 
 async function finalizarVenta() {
-  if(carrito.length === 0) return alert("Vacio");
+  if(carrito.length === 0) return alert("Carrito vacío");
   const cli = document.getElementById('sel-cliente').value;
   const met = document.getElementById('sel-metodo').value;
   const tot = carrito.reduce((s,i) => s + i.subt, 0);
@@ -181,7 +202,7 @@ async function finalizarVenta() {
   }
   
   generarPDF(cli, tot, met, [...carrito]);
-  alert("✅ Guardado. Busca el PDF en tus descargas.");
+  alert("✅ Venta Guardada. Revisa tus descargas.");
   location.reload();
 }
 
@@ -191,17 +212,19 @@ async function consultarAdmin() {
   const dia = v.filter(x => x.fecha.startsWith(fSel));
 
   let vT = 0, gT = 0;
+  let histHtml = "";
+
   dia.forEach(venta => {
+    vT += (parseFloat(venta.total) || 0);
     const items = JSON.parse(venta.detalle || '[]');
     items.forEach(i => {
-      const pV = parseFloat(i.precio_venta) || 0;
-      const pC = parseFloat(i.precio_compra) || 0;
-      const cant = parseInt(i.cant) || 0;
-      vT += (pV * cant);
-      gT += (pV - pC) * cant;
+      gT += ((parseFloat(i.precio_venta) || 0) - (parseFloat(i.precio_compra) || 0)) * parseInt(i.cant);
     });
+    // Llenar historial visual
+    histHtml += `<tr><td>${venta.cliente}</td><td>L.${venta.total.toFixed(2)}</td><td style="color:${venta.pagado?'green':'red'}">${venta.pagado?'Pagado':'Crédito'}</td></tr>`;
   });
 
+  document.getElementById('historial-body').innerHTML = histHtml || "<tr><td colspan='3'>Sin ventas</td></tr>";
   document.getElementById('c-venta').innerText = vT.toFixed(2);
   document.getElementById('c-ganancia').innerText = gT.toFixed(2);
   document.getElementById('c-40').innerText = (gT * 0.4).toFixed(2);
@@ -211,7 +234,7 @@ async function consultarAdmin() {
 function renderDeudores(deudas) {
   document.getElementById('list-deudores').innerHTML = deudas.map(d => `
     <div class="deuda-card">
-      <div><b>${d.cliente}</b><br><small>L. ${d.total.toFixed(2)}</small></div>
+      <div><b>${d.cliente}</b><br><small>Saldo: L. ${d.total.toFixed(2)}</small></div>
       <button onclick="cobrar(${d.id})" style="background:var(--verde); width:auto; padding:8px;">COBRAR</button>
     </div>`).join('');
 }
@@ -224,13 +247,14 @@ async function cobrar(id) {
 function generarPDF(cli, tot, met, items) {
   const { jsPDF } = window.jspdf;
   const doc = new jsPDF();
-  doc.text("GRUPO CRUCERR", 10, 10);
-  doc.text("Cliente: " + cli, 10, 20);
-  doc.text("Total: L. " + tot.toFixed(2), 10, 30);
-  const rows = items.map(i => [i.nombre, i.cant, i.subt.toFixed(2)]);
-  doc.autoTable({ head:[['Prod', 'Cant', 'Subt']], body: rows, startY: 40 });
-  // DESCARGA DIRECTA PARA EVITAR BLOQUEO DE APK
-  doc.save(`Factura_${cli}_${new Date().getTime()}.pdf`);
+  doc.setFontSize(20);
+  doc.text("GRUPO CRUCERR", 105, 15, { align: "center" });
+  doc.setFontSize(12);
+  doc.text(`Cliente: ${cli}`, 20, 30);
+  doc.text(`Pago: ${met.toUpperCase()}`, 20, 37);
+  doc.autoTable({ head:[['Prod', 'Cant', 'Total']], body: items.map(i=>[i.nombre, i.cant, i.subt.toFixed(2)]), startY: 45 });
+  doc.text(`TOTAL FINAL: L. ${tot.toFixed(2)}`, 130, doc.lastAutoTable.finalY + 10);
+  doc.save(`Venta_${cli}.pdf`);
 }
 
 function abrirModalProd() { document.getElementById('m-id').value=""; document.getElementById('modal-prod').style.display='block'; }
@@ -245,16 +269,16 @@ function editarProd(id) {
   document.getElementById('modal-prod').style.display='block';
 }
 async function guardarProducto() {
-  const id = document.getElementById('m-id').value;
   const obj = {
     nombre: document.getElementById('m-nombre').value,
     precio_compra: parseFloat(document.getElementById('m-compra').value),
     precio_venta: parseFloat(document.getElementById('m-venta').value),
     stock: parseInt(document.getElementById('m-stock').value)
   };
+  const id = document.getElementById('m-id').value;
   if(id) await _sb.from('inventario').update(obj).eq('id', id);
   else await _sb.from('inventario').insert([obj]);
-  cerrarModal(); cargarDatos();
+  cerrarModal(); cargarTodo();
 }
 </script>
 </body>
