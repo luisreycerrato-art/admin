@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>SISTEMA CRUCERR PRO - ADMIN</title>
+  <title>SISTEMA CRUCERR PRO - REPARADO</title>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.23/jspdf.plugin.autotable.min.js"></script>
@@ -12,27 +12,20 @@
     body { font-family: 'Segoe UI', sans-serif; background: var(--bg); margin: 0; padding: 10px; color: #333; }
     .header { background: var(--azul); color: white; padding: 15px; border-radius: 12px; text-align: center; margin-bottom: 10px; }
     .card { background: white; border-radius: 12px; padding: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); margin-bottom: 15px; }
-    
     .nav-tabs { display: flex; gap: 5px; margin-bottom: 15px; overflow-x: auto; padding-bottom: 5px; }
     .tab-btn { background: #ddd; color: #333; border: none; padding: 10px 15px; border-radius: 8px; font-weight: bold; cursor: pointer; flex: 1; white-space: nowrap; }
     .active-tab { background: var(--azul); color: white; }
-
     .cierre-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; margin-bottom: 15px; }
     .cierre-item { padding: 15px; border-radius: 12px; color: white; text-align: center; }
     .cierre-item h4 { margin: 0; font-size: 0.8rem; opacity: 0.9; }
     .cierre-item p { margin: 5px 0 0; font-size: 1.1rem; font-weight: bold; }
-
     input, select, button { width: 100%; padding: 12px; margin-top: 8px; border-radius: 8px; border: 1px solid #ddd; box-sizing: border-box; font-size: 16px; }
     button { color: white; border: none; font-weight: bold; cursor: pointer; }
-    
     table { width: 100%; border-collapse: collapse; font-size: 11px; }
     th, td { padding: 8px; text-align: left; border-bottom: 1px solid #eee; }
     th { background: #f8f9fa; color: var(--azul); }
-    .scroll { max-height: 350px; overflow-y: auto; border: 1px solid #eee; border-radius: 8px; background: white; }
-    
-    .stock-badge { padding: 3px 6px; border-radius: 4px; font-weight: bold; }
-    .stock-low { background: #ffebeb; color: var(--rojo); }
-    .stock-ok { background: #ebffeb; color: var(--verde); }
+    .scroll { max-height: 300px; overflow-y: auto; border: 1px solid #eee; border-radius: 8px; background: white; }
+    .deuda-card { border-left: 6px solid var(--rojo); padding: 12px; background: #fff; margin-bottom: 10px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
   </style>
 </head>
 <body>
@@ -43,7 +36,7 @@
 </div>
 
 <div class="nav-tabs">
-  <button id="t-vender" class="tab-btn active-tab" onclick="showTab('vender')">🛒 Vender</button>
+  <button id="t-vender" class="tab-btn active-tab" onclick="showTab('vender')">🛒 Pedidos</button>
   <button id="t-deuda" class="tab-btn" onclick="showTab('deuda')">💰 Deudores</button>
   <button id="t-admin" class="tab-btn" onclick="showTab('admin')">📊 Admin Pro</button>
 </div>
@@ -52,40 +45,40 @@
   <div class="card">
     <label>👤 Cliente:</label>
     <select id="sel-cliente"></select>
-    <label style="margin-top:10px; display:block;">🔍 Buscar Producto:</label>
-    <input type="text" id="bus-prod" placeholder="Escribe para buscar..." oninput="filtrarProductos()">
+    <label style="margin-top:10px; display:block;">🔍 Buscar Medicamento:</label>
+    <input type="text" id="bus-prod" placeholder="Escriba nombre..." oninput="filtrarProductos()">
     <div style="display: flex; gap: 8px;">
       <div style="flex: 3;"><select id="sel-prod"></select></div>
       <div style="flex: 1;"><input type="number" id="inp-cant" value="1" min="1"></div>
     </div>
-    <button onclick="addCarrito()" style="background: var(--azul); margin-top:15px;">🛒 Añadir al Pedido</button>
+    <button onclick="addCarrito()" style="background: var(--azul); margin-top:15px;">🛒 Añadir al Carrito</button>
   </div>
   <div class="card">
-    <div id="list-carrito"></div>
-    <div style="background:var(--azul); color:white; padding:15px; border-radius:10px; text-align:right; margin-top:10px;">
+    <h3>📋 Carrito de Venta</h3>
+    <div id="list-carrito" style="margin-bottom:10px;"></div>
+    <div style="background:var(--azul); color:white; padding:15px; border-radius:10px; text-align:right;">
       TOTAL L. <span id="lbl-total" style="font-size:1.5rem; font-weight:bold;">0.00</span>
     </div>
-    <select id="sel-metodo" style="margin-top:15px; border: 2px solid var(--azul);">
+    <label>Método de Cobro:</label>
+    <select id="sel-metodo">
       <option value="contado">PAGO: CONTADO ✅</option>
       <option value="credito">PAGO: CRÉDITO ❌</option>
     </select>
-    <button onclick="finalizarVenta()" style="background:var(--verde); margin-top:15px; padding:15px; font-size:18px; width:100%;">🚀 FINALIZAR Y FACTURAR</button>
+    <button onclick="finalizarVenta()" style="background:var(--verde); margin-top:15px; padding:18px; font-size:18px; width:100%;">🚀 FACTURAR Y GUARDAR</button>
   </div>
 </div>
 
 <div id="v-deuda" class="tab-content" style="display:none;">
-  <div class="card" style="border-top: 5px solid var(--rojo);">
-    <h3>👤 Clientes con Saldo Pendiente</h3>
-    <div id="list-deudores">Cargando...</div>
+  <div class="card">
+    <h3>💰 Cuentas por Cobrar</h3>
+    <div id="list-deudores">Cargando deudas...</div>
   </div>
 </div>
 
 <div id="v-admin" class="tab-content" style="display:none;">
   <div class="card">
-    <div style="display: flex; gap: 10px;">
-      <input type="date" id="filtro-fecha" style="flex: 2;">
-      <button onclick="consultarAdmin()" style="flex: 1; background: var(--azul);">Consultar</button>
-    </div>
+    <input type="date" id="filtro-fecha">
+    <button onclick="consultarAdmin()" style="background: var(--azul); margin-top:10px;">📊 Ver Cierre del Día</button>
   </div>
   <div class="cierre-grid">
     <div class="cierre-item" style="background: var(--azul);"><h4>VENTA</h4><p id="c-venta">0.00</p></div>
@@ -93,35 +86,29 @@
     <div class="cierre-item" style="background: var(--purpura);"><h4>40%</h4><p id="c-40">0.00</p></div>
     <div class="cierre-item" style="background: var(--rosa);"><h4>20%</h4><p id="c-20">0.00</p></div>
   </div>
-
-  <div class="card" style="border-left: 5px solid var(--verde);">
-    <h3 style="margin-top:0;">📦 Gestión de Inventario</h3>
-    <button onclick="abrirModalProd()" style="background:var(--verde); margin-bottom:10px;">➕ Nuevo Producto</button>
-    <input type="text" id="bus-inv" placeholder="Filtrar inventario..." oninput="renderTablaInv()" style="margin-bottom:10px;">
+  <div class="card">
+    <h3>📦 Control de Stock</h3>
+    <button onclick="abrirModalProd()" style="background:var(--verde); margin-bottom:10px;">➕ Producto Nuevo</button>
     <div class="scroll">
       <table>
-        <thead><tr><th>Producto</th><th>Venta</th><th>Stock</th><th>Acción</th></tr></thead>
+        <thead><tr><th>Nombre</th><th>Venta</th><th>Stock</th><th>Editar</th></tr></thead>
         <tbody id="tabla-inv-body"></tbody>
       </table>
     </div>
   </div>
-
-  <div class="card">
-    <button onclick="descargarExcel()" style="background:#1d6f42;">📥 Descargar Excel del Día</button>
-  </div>
 </div>
 
-<div id="modal-prod" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:2000; padding:20px; box-sizing:border-box;">
-  <div class="card" style="max-width:400px; margin:auto; margin-top:5%;">
+<div id="modal-prod" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:2000; padding:20px;">
+  <div class="card" style="max-width:400px; margin:auto;">
     <h3 id="modal-titulo">Producto</h3>
     <input type="hidden" id="m-id">
     <label>Nombre:</label><input type="text" id="m-nombre">
     <label>P. Compra:</label><input type="number" id="m-compra" step="0.01">
     <label>P. Venta:</label><input type="number" id="m-venta" step="0.01">
     <label>Stock:</label><input type="number" id="m-stock">
-    <div style="display:flex; gap:10px; margin-top:20px;">
-      <button onclick="cerrarModal()" style="background:#666; width:100%;">Cancelar</button>
-      <button onclick="guardarProducto()" style="background:var(--verde); width:100%;">Guardar</button>
+    <div style="display:flex; gap:10px; margin-top:15px;">
+      <button onclick="cerrarModal()" style="background:#666; flex:1;">Cerrar</button>
+      <button onclick="guardarProducto()" style="background:var(--verde); flex:1;">Guardar</button>
     </div>
   </div>
 </div>
@@ -139,23 +126,31 @@ window.onload = async () => {
 };
 
 async function cargarDatos() {
-  document.getElementById('status').innerText = 'Sincronizando...';
+  document.getElementById('status').innerText = '⏳ Sincronizando...';
   const { data: p } = await _sb.from('inventario').select('*').order('nombre');
   const { data: c } = await _sb.from('pulperia').select('*').order('nombre');
-  const { data: vDeuda } = await _sb.from('ventas').select('*').eq('pagado', false);
+  const { data: vDeuda } = await _sb.from('ventas').select('*').eq('pagado', false).order('fecha', {ascending: false});
   
   productos = p || []; clientes = c || [];
   
-  actualizarSelects();
-  renderTablaInv();
+  actualizarInterface();
   renderDeudores(vDeuda || []);
-  document.getElementById('status').innerText = '● En línea';
+  document.getElementById('status').innerText = '● Sistema Crucerr Online';
 }
 
-function actualizarSelects() {
-  const pOpts = productos.map(p => `<option value="${p.id}">${p.nombre} (S: ${p.stock})</option>`).join('');
+function actualizarInterface() {
+  const pOpts = productos.map(p => `<option value="${p.id}">${p.nombre} (Stock: ${p.stock})</option>`).join('');
   document.getElementById('sel-prod').innerHTML = pOpts;
   document.getElementById('sel-cliente').innerHTML = clientes.map(c => `<option value="${c.nombre}">${c.nombre}</option>`).join('');
+  
+  // Tabla Inventario
+  document.getElementById('tabla-inv-body').innerHTML = productos.map(p => `
+    <tr>
+      <td>${p.nombre}</td>
+      <td>L.${p.precio_venta}</td>
+      <td style="color:${p.stock < 10 ? 'red':'green'}; font-weight:bold;">${p.stock}</td>
+      <td><button onclick="editarProdInv(${p.id})" style="background:var(--azul); font-size:10px; padding:4px;">Editar</button></td>
+    </tr>`).join('');
 }
 
 function showTab(tab) {
@@ -165,19 +160,102 @@ function showTab(tab) {
   document.getElementById('t-' + tab).classList.add('active-tab');
 }
 
-// FUNCIONES DE INVENTARIO
-function renderTablaInv() {
-  const bus = document.getElementById('bus-inv').value.toLowerCase();
-  const list = productos.filter(p => p.nombre.toLowerCase().includes(bus));
-  document.getElementById('tabla-inv-body').innerHTML = list.map(p => `
-    <tr>
-      <td><b>${p.nombre}</b></td>
-      <td>L.${p.precio_venta}</td>
-      <td><span class="stock-badge ${p.stock < 10 ? 'stock-low' : 'stock-ok'}">${p.stock}</span></td>
-      <td><button onclick="editarProdInv(${p.id})" style="background:var(--azul); padding:4px; font-size:10px; width:auto;">EDIT</button></td>
-    </tr>`).join('');
+function filtrarProductos() {
+  const b = document.getElementById('bus-prod').value.toLowerCase();
+  const f = productos.filter(p => p.nombre.toLowerCase().includes(b));
+  document.getElementById('sel-prod').innerHTML = f.map(p => `<option value="${p.id}">${p.nombre} (Stock: ${p.stock})</option>`).join('');
 }
 
+function addCarrito() {
+  const id = document.getElementById('sel-prod').value;
+  const cant = parseInt(document.getElementById('inp-cant').value);
+  const p = productos.find(x => x.id == id);
+  if(!p) return;
+  if(cant > p.stock) return alert("⚠️ No hay suficiente stock de " + p.nombre);
+  
+  carrito.push({ ...p, cant, subt: p.precio_venta * cant });
+  renderCarrito();
+}
+
+function renderCarrito() {
+  const div = document.getElementById('list-carrito');
+  let t = 0; div.innerHTML = '';
+  carrito.forEach((i, idx) => {
+    t += i.subt;
+    div.innerHTML += `<div style="padding:10px; border-bottom:1px solid #eee; display:flex; justify-content:space-between;">
+      <span><b>${i.nombre}</b> (x${i.cant})</span>
+      <span>L.${i.subt.toFixed(2)} <button onclick="carrito.splice(${idx},1);renderCarrito()" style="background:var(--rojo); padding:2px 8px; margin-left:10px;">X</button></span>
+    </div>`;
+  });
+  document.getElementById('lbl-total').innerText = t.toFixed(2);
+}
+
+async function finalizarVenta() {
+  if(carrito.length === 0) return alert("❌ El pedido está vacío");
+  const cli = document.getElementById('sel-cliente').value;
+  const met = document.getElementById('sel-metodo').value;
+  const tot = carrito.reduce((s,i) => s + i.subt, 0);
+
+  document.getElementById('status').innerText = '🚀 Procesando...';
+
+  const { error } = await _sb.from('ventas').insert([{ 
+    cliente: cli, total: tot, metodo_pago: met, pagado: met === 'contado', detalle: JSON.stringify(carrito), fecha: new Date().toISOString()
+  }]);
+  
+  if(error) return alert("Error al guardar: " + error.message);
+
+  for(const i of carrito) {
+    await _sb.from('inventario').update({ stock: i.stock - i.cant }).eq('id', i.id);
+  }
+  
+  generarFacturaVisual(cli, tot, met, [...carrito]);
+  alert("✅ Venta Guardada con éxito");
+  location.reload();
+}
+
+function renderDeudores(deudas) {
+  const div = document.getElementById('list-deudores');
+  if(deudas.length === 0) { div.innerHTML = "🎉 No hay deudas pendientes."; return; }
+  div.innerHTML = deudas.map(d => `
+    <div class="deuda-card">
+      <div style="display:flex; justify-content:space-between; align-items:center;">
+        <div>
+          <p class="deuda-cliente">👤 ${d.cliente}</p>
+          <p style="margin:0; font-size:14px; font-weight:bold; color:var(--rojo);">Debe: L. ${d.total.toFixed(2)}</p>
+          <small>Fecha: ${new Date(d.fecha).toLocaleDateString()}</small>
+        </div>
+        <button onclick="cobrarDeuda(${d.id})" style="background:var(--verde); padding:10px; border-radius:8px;">COBRAR</button>
+      </div>
+    </div>`).join('');
+}
+
+async function cobrarDeuda(id) {
+  if(!confirm("¿Confirmar que el cliente ya pagó?")) return;
+  await _sb.from('ventas').update({ pagado: true }).eq('id', id);
+  cargarDatos();
+}
+
+async function consultarAdmin() {
+  const fechaSel = document.getElementById('filtro-fecha').value;
+  const { data: v } = await _sb.from('ventas').select('*');
+  const ventasDia = v.filter(x => new Date(x.fecha).toISOString().split('T')[0] === fechaSel);
+
+  let tV = 0, tG = 0;
+  ventasDia.forEach(v => {
+    const det = JSON.parse(v.detalle || '[]');
+    det.forEach(i => {
+      tV += (i.precio_venta * i.cant);
+      tG += (i.precio_venta - (i.precio_compra || 0)) * i.cant;
+    });
+  });
+
+  document.getElementById('c-venta').innerText = tV.toFixed(2);
+  document.getElementById('c-ganancia').innerText = tG.toFixed(2);
+  document.getElementById('c-40').innerText = (tG * 0.4).toFixed(2);
+  document.getElementById('c-20').innerText = (tG * 0.2).toFixed(2);
+}
+
+// INVENTARIO ADMIN
 function abrirModalProd() {
   document.getElementById('m-id').value = "";
   document.getElementById('m-nombre').value = "";
@@ -212,105 +290,36 @@ async function guardarProducto() {
 
 function cerrarModal() { document.getElementById('modal-prod').style.display = 'none'; }
 
-// FUNCIONES DE VENTA
-function filtrarProductos() {
-  const b = document.getElementById('bus-prod').value.toLowerCase();
-  const f = productos.filter(p => p.nombre.toLowerCase().includes(b));
-  document.getElementById('sel-prod').innerHTML = f.map(p => `<option value="${p.id}">${p.nombre} (S: ${p.stock})</option>`).join('');
-}
-
-function addCarrito() {
-  const id = document.getElementById('sel-prod').value;
-  const cant = parseInt(document.getElementById('inp-cant').value);
-  const p = productos.find(x => x.id == id);
-  if(!p) return;
-  if(cant > p.stock) return alert("Stock insuficiente");
-  carrito.push({ ...p, cant, subt: p.precio_venta * cant });
-  renderCarrito();
-}
-
-function renderCarrito() {
-  const div = document.getElementById('list-carrito');
-  let t = 0; div.innerHTML = '';
-  carrito.forEach((i, idx) => {
-    t += i.subt;
-    div.innerHTML += `<div style="padding:8px 0; border-bottom:1px solid #eee;">${i.nombre} x${i.cant} - L.${i.subt.toFixed(2)} <button onclick="carrito.splice(${idx},1);renderCarrito()" style="background:var(--rojo); float:right; padding:2px 5px; width:auto;">X</button></div>`;
-  });
-  document.getElementById('lbl-total').innerText = t.toFixed(2);
-}
-
-async function finalizarVenta() {
-  if(carrito.length === 0) return alert("Carrito vacío");
-  const cli = document.getElementById('sel-cliente').value;
-  const met = document.getElementById('sel-metodo').value;
-  const tot = carrito.reduce((s,i) => s + i.subt, 0);
-
-  const { error } = await _sb.from('ventas').insert([{ 
-    cliente: cli, total: tot, metodo_pago: met, pagado: met === 'contado', detalle: JSON.stringify(carrito), fecha: new Date().toISOString()
-  }]);
-  
-  if(error) return alert(error.message);
-  for(const i of carrito) {
-    await _sb.from('inventario').update({ stock: i.stock - i.cant }).eq('id', i.id);
-  }
-  generarFactura(cli, tot, met);
-  alert("Venta realizada"); location.reload();
-}
-
-// FUNCIONES DE ADMIN
-async function consultarAdmin() {
-  const fechaSel = document.getElementById('filtro-fecha').value;
-  const { data: v } = await _sb.from('ventas').select('*');
-  const ventasDia = v.filter(x => new Date(x.fecha).toISOString().split('T')[0] === fechaSel);
-
-  let tV = 0, tG = 0;
-  ventasDia.forEach(venta => {
-    const det = JSON.parse(venta.detalle || '[]');
-    det.forEach(i => {
-      tV += (i.precio_venta * i.cant);
-      tG += (i.precio_venta - (i.precio_compra || 0)) * i.cant;
-    });
-  });
-
-  document.getElementById('c-venta').innerText = tV.toFixed(2);
-  document.getElementById('c-ganancia').innerText = tG.toFixed(2);
-  document.getElementById('c-40').innerText = (tG * 0.4).toFixed(2);
-  document.getElementById('c-20').innerText = (tG * 0.2).toFixed(2);
-}
-
-function renderDeudores(deudas) {
-  document.getElementById('list-deudores').innerHTML = deudas.map(d => `
-    <div class="deuda-card">
-      <p style="color:var(--azul); font-weight:bold; margin:0;">👤 ${d.cliente}</p>
-      <small>Saldo: L. ${d.total.toFixed(2)}</small><br>
-      <button onclick="cobrar(${d.id})" style="background:var(--azul); font-size:11px; padding:5px; width:auto; margin-top:5px;">Marcar Pagado</button>
-    </div>`).join('');
-}
-
-async function cobrar(id) {
-  if(!confirm("¿Cobrar deuda?")) return;
-  await _sb.from('ventas').update({ pagado: true }).eq('id', id);
-  cargarDatos();
-}
-
-function generarFactura(cli, tot, met) {
+function generarFacturaVisual(cli, tot, met, items) {
   const { jsPDF } = window.jspdf;
   const doc = new jsPDF();
+  
+  doc.setFontSize(22);
+  doc.setTextColor(5, 44, 92);
   doc.text("GRUPO CRUCERR", 105, 20, { align: "center" });
-  doc.text(`Cliente: ${cli} - Total: L.${tot.toFixed(2)}`, 20, 40);
-  doc.autoTable({ head:[['Prod', 'Cant', 'Subt']], body: carrito.map(i=>[i.nombre, i.cant, i.subt.toFixed(2)]), startY: 50 });
-  doc.save(`Factura_${cli}.pdf`);
-}
-
-function descargarExcel() {
-  const f = document.getElementById('filtro-fecha').value;
-  let csv = "Venta Total,Ganancia Total,40%,20%\n";
-  csv += `${document.getElementById('c-venta').innerText},${document.getElementById('c-ganancia').innerText},${document.getElementById('c-40').innerText},${document.getElementById('c-20').innerText}`;
-  const blob = new Blob(["\ufeff" + csv], { type: "text/csv;charset=utf-8;" });
-  const link = document.createElement("a");
-  link.href = URL.createObjectURL(blob);
-  link.download = `Cierre_${f}.csv`;
-  link.click();
+  
+  doc.setFontSize(12);
+  doc.setTextColor(0);
+  doc.text(`CLIENTE: ${cli}`, 20, 35);
+  doc.text(`TIPO: ${met.toUpperCase()}`, 20, 42);
+  doc.text(`FECHA: ${new Date().toLocaleString()}`, 20, 49);
+  
+  const body = items.map(i => [i.nombre, i.cant, `L.${i.precio_venta.toFixed(2)}`, `L.${(i.precio_venta * i.cant).toFixed(2)}`]);
+  
+  doc.autoTable({
+    startY: 55,
+    head: [['Producto', 'Cant', 'Precio', 'Subtotal']],
+    body: body,
+    theme: 'striped',
+    headStyles: { fillColor: [5, 44, 92] }
+  });
+  
+  doc.setFontSize(16);
+  doc.text(`TOTAL FINAL: L. ${tot.toFixed(2)}`, 130, doc.lastAutoTable.finalY + 15);
+  
+  // Cambiado para máxima compatibilidad móvil
+  const pdfOutput = doc.output('bloburl');
+  window.open(pdfOutput, '_blank');
 }
 </script>
 </body>
