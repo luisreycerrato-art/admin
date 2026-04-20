@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>SISTEMA CRUCERR PRO</title>
+  <title>SISTEMA CRUCERR PRO - ADMIN</title>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.23/jspdf.plugin.autotable.min.js"></script>
@@ -13,27 +13,26 @@
     .header { background: var(--azul); color: white; padding: 15px; border-radius: 12px; text-align: center; margin-bottom: 10px; }
     .card { background: white; border-radius: 12px; padding: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); margin-bottom: 15px; }
     
-    /* Navegación */
     .nav-tabs { display: flex; gap: 5px; margin-bottom: 15px; overflow-x: auto; padding-bottom: 5px; }
     .tab-btn { background: #ddd; color: #333; border: none; padding: 10px 15px; border-radius: 8px; font-weight: bold; cursor: pointer; flex: 1; white-space: nowrap; }
     .active-tab { background: var(--azul); color: white; }
 
-    /* Cierre Grid */
     .cierre-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; margin-bottom: 15px; }
     .cierre-item { padding: 15px; border-radius: 12px; color: white; text-align: center; }
     .cierre-item h4 { margin: 0; font-size: 0.8rem; opacity: 0.9; }
     .cierre-item p { margin: 5px 0 0; font-size: 1.1rem; font-weight: bold; }
 
     input, select, button { width: 100%; padding: 12px; margin-top: 8px; border-radius: 8px; border: 1px solid #ddd; box-sizing: border-box; font-size: 16px; }
-    button { background: var(--verde); color: white; border: none; font-weight: bold; }
+    button { color: white; border: none; font-weight: bold; cursor: pointer; }
     
     table { width: 100%; border-collapse: collapse; font-size: 11px; }
     th, td { padding: 8px; text-align: left; border-bottom: 1px solid #eee; }
     th { background: #f8f9fa; color: var(--azul); }
-    .scroll { max-height: 400px; overflow-y: auto; border: 1px solid #eee; border-radius: 8px; }
+    .scroll { max-height: 350px; overflow-y: auto; border: 1px solid #eee; border-radius: 8px; background: white; }
     
-    .deuda-card { border-left: 5px solid var(--rojo); padding: 10px; background: #fff; margin-bottom: 10px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
-    .deuda-cliente { color: var(--azul); font-weight: bold; font-size: 16px; margin: 0; }
+    .stock-badge { padding: 3px 6px; border-radius: 4px; font-weight: bold; }
+    .stock-low { background: #ffebeb; color: var(--rojo); }
+    .stock-ok { background: #ebffeb; color: var(--verde); }
   </style>
 </head>
 <body>
@@ -45,7 +44,6 @@
 
 <div class="nav-tabs">
   <button id="t-vender" class="tab-btn active-tab" onclick="showTab('vender')">🛒 Vender</button>
-  <button id="t-stock" class="tab-btn" onclick="showTab('stock')">📦 Stock</button>
   <button id="t-deuda" class="tab-btn" onclick="showTab('deuda')">💰 Deudores</button>
   <button id="t-admin" class="tab-btn" onclick="showTab('admin')">📊 Admin Pro</button>
 </div>
@@ -54,7 +52,7 @@
   <div class="card">
     <label>👤 Cliente:</label>
     <select id="sel-cliente"></select>
-    <label style="margin-top:10px; display:block;">🔍 Producto:</label>
+    <label style="margin-top:10px; display:block;">🔍 Buscar Producto:</label>
     <input type="text" id="bus-prod" placeholder="Escribe para buscar..." oninput="filtrarProductos()">
     <div style="display: flex; gap: 8px;">
       <div style="flex: 3;"><select id="sel-prod"></select></div>
@@ -63,33 +61,22 @@
     <button onclick="addCarrito()" style="background: var(--azul); margin-top:15px;">🛒 Añadir al Pedido</button>
   </div>
   <div class="card">
-    <h3>📋 Detalle</h3>
     <div id="list-carrito"></div>
-    <div class="total-box" style="background:var(--azul); color:white; padding:15px; border-radius:10px; text-align:right; margin-top:10px;">
+    <div style="background:var(--azul); color:white; padding:15px; border-radius:10px; text-align:right; margin-top:10px;">
       TOTAL L. <span id="lbl-total" style="font-size:1.5rem; font-weight:bold;">0.00</span>
     </div>
     <select id="sel-metodo" style="margin-top:15px; border: 2px solid var(--azul);">
       <option value="contado">PAGO: CONTADO ✅</option>
       <option value="credito">PAGO: CRÉDITO ❌</option>
     </select>
-    <button onclick="finalizarVenta()" style="margin-top:15px; padding:15px; font-size:18px;">🚀 FINALIZAR Y FACTURAR</button>
-  </div>
-</div>
-
-<div id="v-stock" class="tab-content" style="display:none;">
-  <div class="card">
-    <h3>📥 Entrada de Mercadería</h3>
-    <label>Producto:</label>
-    <select id="sel-stock-prod"></select>
-    <input type="number" id="inp-stock-cant" placeholder="Cantidad que entra">
-    <button onclick="actualizarStock()" style="background:var(--azul); margin-top:15px;">⬆ Sumar al Inventario</button>
+    <button onclick="finalizarVenta()" style="background:var(--verde); margin-top:15px; padding:15px; font-size:18px; width:100%;">🚀 FINALIZAR Y FACTURAR</button>
   </div>
 </div>
 
 <div id="v-deuda" class="tab-content" style="display:none;">
   <div class="card" style="border-top: 5px solid var(--rojo);">
     <h3>👤 Clientes con Saldo Pendiente</h3>
-    <div id="list-deudores"></div>
+    <div id="list-deudores">Cargando...</div>
   </div>
 </div>
 
@@ -97,23 +84,44 @@
   <div class="card">
     <div style="display: flex; gap: 10px;">
       <input type="date" id="filtro-fecha" style="flex: 2;">
-      <button onclick="consultarAdmin()" style="flex: 1;">Consultar</button>
+      <button onclick="consultarAdmin()" style="flex: 1; background: var(--azul);">Consultar</button>
     </div>
   </div>
   <div class="cierre-grid">
     <div class="cierre-item" style="background: var(--azul);"><h4>VENTA</h4><p id="c-venta">0.00</p></div>
     <div class="cierre-item" style="background: var(--verde);"><h4>GANANCIA</h4><p id="c-ganancia">0.00</p></div>
-    <div class="cierre-item" style="background: var(--naranja);"><h4>CRÉDITOS</h4><p id="c-credito">0.00</p></div>
     <div class="cierre-item" style="background: var(--purpura);"><h4>40%</h4><p id="c-40">0.00</p></div>
     <div class="cierre-item" style="background: var(--rosa);"><h4>20%</h4><p id="c-20">0.00</p></div>
   </div>
-  <div class="card">
-    <button onclick="descargarExcel()" style="background:#1d6f42; margin-bottom:10px;">📥 Descargar Excel del Día</button>
+
+  <div class="card" style="border-left: 5px solid var(--verde);">
+    <h3 style="margin-top:0;">📦 Gestión de Inventario</h3>
+    <button onclick="abrirModalProd()" style="background:var(--verde); margin-bottom:10px;">➕ Nuevo Producto</button>
+    <input type="text" id="bus-inv" placeholder="Filtrar inventario..." oninput="renderTablaInv()" style="margin-bottom:10px;">
     <div class="scroll">
       <table>
-        <thead><tr><th>Cliente</th><th>Prod</th><th>Venta</th><th>Gan.</th><th>Estado</th></tr></thead>
-        <tbody id="tabla-admin-body"></tbody>
+        <thead><tr><th>Producto</th><th>Venta</th><th>Stock</th><th>Acción</th></tr></thead>
+        <tbody id="tabla-inv-body"></tbody>
       </table>
+    </div>
+  </div>
+
+  <div class="card">
+    <button onclick="descargarExcel()" style="background:#1d6f42;">📥 Descargar Excel del Día</button>
+  </div>
+</div>
+
+<div id="modal-prod" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:2000; padding:20px; box-sizing:border-box;">
+  <div class="card" style="max-width:400px; margin:auto; margin-top:5%;">
+    <h3 id="modal-titulo">Producto</h3>
+    <input type="hidden" id="m-id">
+    <label>Nombre:</label><input type="text" id="m-nombre">
+    <label>P. Compra:</label><input type="number" id="m-compra" step="0.01">
+    <label>P. Venta:</label><input type="number" id="m-venta" step="0.01">
+    <label>Stock:</label><input type="number" id="m-stock">
+    <div style="display:flex; gap:10px; margin-top:20px;">
+      <button onclick="cerrarModal()" style="background:#666; width:100%;">Cancelar</button>
+      <button onclick="guardarProducto()" style="background:var(--verde); width:100%;">Guardar</button>
     </div>
   </div>
 </div>
@@ -138,14 +146,16 @@ async function cargarDatos() {
   
   productos = p || []; clientes = c || [];
   
-  // Llenar selects
-  const pOpts = productos.map(p => `<option value="${p.id}">${p.nombre} (S: ${p.stock})</option>`).join('');
-  document.getElementById('sel-prod').innerHTML = pOpts;
-  document.getElementById('sel-stock-prod').innerHTML = pOpts;
-  document.getElementById('sel-cliente').innerHTML = clientes.map(c => `<option value="${c.nombre}">${c.nombre}</option>`).join('');
-  
+  actualizarSelects();
+  renderTablaInv();
   renderDeudores(vDeuda || []);
   document.getElementById('status').innerText = '● En línea';
+}
+
+function actualizarSelects() {
+  const pOpts = productos.map(p => `<option value="${p.id}">${p.nombre} (S: ${p.stock})</option>`).join('');
+  document.getElementById('sel-prod').innerHTML = pOpts;
+  document.getElementById('sel-cliente').innerHTML = clientes.map(c => `<option value="${c.nombre}">${c.nombre}</option>`).join('');
 }
 
 function showTab(tab) {
@@ -153,9 +163,56 @@ function showTab(tab) {
   document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active-tab'));
   document.getElementById('v-' + tab).style.display = 'block';
   document.getElementById('t-' + tab).classList.add('active-tab');
-  if(tab === 'admin') consultarAdmin();
 }
 
+// FUNCIONES DE INVENTARIO
+function renderTablaInv() {
+  const bus = document.getElementById('bus-inv').value.toLowerCase();
+  const list = productos.filter(p => p.nombre.toLowerCase().includes(bus));
+  document.getElementById('tabla-inv-body').innerHTML = list.map(p => `
+    <tr>
+      <td><b>${p.nombre}</b></td>
+      <td>L.${p.precio_venta}</td>
+      <td><span class="stock-badge ${p.stock < 10 ? 'stock-low' : 'stock-ok'}">${p.stock}</span></td>
+      <td><button onclick="editarProdInv(${p.id})" style="background:var(--azul); padding:4px; font-size:10px; width:auto;">EDIT</button></td>
+    </tr>`).join('');
+}
+
+function abrirModalProd() {
+  document.getElementById('m-id').value = "";
+  document.getElementById('m-nombre').value = "";
+  document.getElementById('m-compra').value = "";
+  document.getElementById('m-venta').value = "";
+  document.getElementById('m-stock').value = "";
+  document.getElementById('modal-prod').style.display = 'block';
+}
+
+function editarProdInv(id) {
+  const p = productos.find(x => x.id == id);
+  document.getElementById('m-id').value = p.id;
+  document.getElementById('m-nombre').value = p.nombre;
+  document.getElementById('m-compra').value = p.precio_compra;
+  document.getElementById('m-venta').value = p.precio_venta;
+  document.getElementById('m-stock').value = p.stock;
+  document.getElementById('modal-prod').style.display = 'block';
+}
+
+async function guardarProducto() {
+  const id = document.getElementById('m-id').value;
+  const obj = {
+    nombre: document.getElementById('m-nombre').value,
+    precio_compra: parseFloat(document.getElementById('m-compra').value),
+    precio_venta: parseFloat(document.getElementById('m-venta').value),
+    stock: parseInt(document.getElementById('m-stock').value)
+  };
+  if(id) await _sb.from('inventario').update(obj).eq('id', id);
+  else await _sb.from('inventario').insert([obj]);
+  cerrarModal(); cargarDatos();
+}
+
+function cerrarModal() { document.getElementById('modal-prod').style.display = 'none'; }
+
+// FUNCIONES DE VENTA
 function filtrarProductos() {
   const b = document.getElementById('bus-prod').value.toLowerCase();
   const f = productos.filter(p => p.nombre.toLowerCase().includes(b));
@@ -166,8 +223,9 @@ function addCarrito() {
   const id = document.getElementById('sel-prod').value;
   const cant = parseInt(document.getElementById('inp-cant').value);
   const p = productos.find(x => x.id == id);
+  if(!p) return;
   if(cant > p.stock) return alert("Stock insuficiente");
-  carrito.push({ ...p, cant, subt: p.precio * cant });
+  carrito.push({ ...p, cant, subt: p.precio_venta * cant });
   renderCarrito();
 }
 
@@ -176,7 +234,7 @@ function renderCarrito() {
   let t = 0; div.innerHTML = '';
   carrito.forEach((i, idx) => {
     t += i.subt;
-    div.innerHTML += `<div style="padding:8px 0; border-bottom:1px solid #eee;"><b>${i.nombre}</b> x${i.cant} - L.${i.subt.toFixed(2)} <button onclick="carrito.splice(${idx},1);renderCarrito()" style="background:var(--rojo); float:right; padding:2px 5px; width:auto;">X</button></div>`;
+    div.innerHTML += `<div style="padding:8px 0; border-bottom:1px solid #eee;">${i.nombre} x${i.cant} - L.${i.subt.toFixed(2)} <button onclick="carrito.splice(${idx},1);renderCarrito()" style="background:var(--rojo); float:right; padding:2px 5px; width:auto;">X</button></div>`;
   });
   document.getElementById('lbl-total').innerText = t.toFixed(2);
 }
@@ -187,83 +245,67 @@ async function finalizarVenta() {
   const met = document.getElementById('sel-metodo').value;
   const tot = carrito.reduce((s,i) => s + i.subt, 0);
 
-  const { error } = await _sb.from('ventas').insert([{ cliente: cli, total: tot, metodo_pago: met, pagado: met === 'contado', detalle: JSON.stringify(carrito) }]);
+  const { error } = await _sb.from('ventas').insert([{ 
+    cliente: cli, total: tot, metodo_pago: met, pagado: met === 'contado', detalle: JSON.stringify(carrito), fecha: new Date().toISOString()
+  }]);
+  
   if(error) return alert(error.message);
-
   for(const i of carrito) {
     await _sb.from('inventario').update({ stock: i.stock - i.cant }).eq('id', i.id);
   }
-  
   generarFactura(cli, tot, met);
   alert("Venta realizada"); location.reload();
 }
 
-function renderDeudores(deudas) {
-  const div = document.getElementById('list-deudores');
-  div.innerHTML = deudas.map(d => `
-    <div class="deuda-card">
-      <p class="deuda-cliente">👤 ${d.cliente}</p>
-      <small>Deuda: L. ${d.total.toFixed(2)}</small><br>
-      <button onclick="cobrar(${d.id})" style="background:var(--azul); font-size:11px; padding:5px; width:auto; margin-top:5px;">Marcar Pagado</button>
-    </div>`).join('');
-}
-
-async function cobrar(id) {
-  await _sb.from('ventas').update({ pagado: true }).eq('id', id);
-  cargarDatos();
-}
-
-async function actualizarStock() {
-  const id = document.getElementById('sel-stock-prod').value;
-  const cant = parseInt(document.getElementById('inp-stock-cant').value);
-  const p = productos.find(x => x.id == id);
-  await _sb.from('inventario').update({ stock: p.stock + cant }).eq('id', id);
-  alert("Stock actualizado"); cargarDatos();
-}
-
+// FUNCIONES DE ADMIN
 async function consultarAdmin() {
   const fechaSel = document.getElementById('filtro-fecha').value;
   const { data: v } = await _sb.from('ventas').select('*');
   const ventasDia = v.filter(x => new Date(x.fecha).toISOString().split('T')[0] === fechaSel);
 
-  let tV = 0, tG = 0, tC = 0, t40 = 0, t20 = 0;
-  const body = document.getElementById('tabla-admin-body');
-  body.innerHTML = '';
-
-  ventasDia.forEach(v => {
-    const det = JSON.parse(v.detalle || '[]');
-    if(!v.pagado) tC += v.total;
+  let tV = 0, tG = 0;
+  ventasDia.forEach(venta => {
+    const det = JSON.parse(venta.detalle || '[]');
     det.forEach(i => {
-      const gan = (i.precio - (i.costo || 0)) * i.cant;
-      tV += (i.precio * i.cant); tG += gan; t40 += gan * 0.4; t20 += gan * 0.2;
-      body.innerHTML += `<tr><td>${v.cliente}</td><td>${i.nombre}</td><td>L.${(i.precio*i.cant).toFixed(2)}</td><td>L.${gan.toFixed(2)}</td><td>${v.pagado?'P':'C'}</td></tr>`;
+      tV += (i.precio_venta * i.cant);
+      tG += (i.precio_venta - (i.precio_compra || 0)) * i.cant;
     });
   });
 
   document.getElementById('c-venta').innerText = tV.toFixed(2);
   document.getElementById('c-ganancia').innerText = tG.toFixed(2);
-  document.getElementById('c-credito').innerText = tC.toFixed(2);
-  document.getElementById('c-40').innerText = t40.toFixed(2);
-  document.getElementById('c-20').innerText = t20.toFixed(2);
+  document.getElementById('c-40').innerText = (tG * 0.4).toFixed(2);
+  document.getElementById('c-20').innerText = (tG * 0.2).toFixed(2);
+}
+
+function renderDeudores(deudas) {
+  document.getElementById('list-deudores').innerHTML = deudas.map(d => `
+    <div class="deuda-card">
+      <p style="color:var(--azul); font-weight:bold; margin:0;">👤 ${d.cliente}</p>
+      <small>Saldo: L. ${d.total.toFixed(2)}</small><br>
+      <button onclick="cobrar(${d.id})" style="background:var(--azul); font-size:11px; padding:5px; width:auto; margin-top:5px;">Marcar Pagado</button>
+    </div>`).join('');
+}
+
+async function cobrar(id) {
+  if(!confirm("¿Cobrar deuda?")) return;
+  await _sb.from('ventas').update({ pagado: true }).eq('id', id);
+  cargarDatos();
 }
 
 function generarFactura(cli, tot, met) {
   const { jsPDF } = window.jspdf;
   const doc = new jsPDF();
   doc.text("GRUPO CRUCERR", 105, 20, { align: "center" });
-  doc.text(`Cliente: ${cli}`, 20, 40);
-  doc.autoTable({ head:[['Producto', 'Cant', 'Subtotal']], body: carrito.map(i=>[i.nombre, i.cant, i.subt.toFixed(2)]), startY: 50 });
+  doc.text(`Cliente: ${cli} - Total: L.${tot.toFixed(2)}`, 20, 40);
+  doc.autoTable({ head:[['Prod', 'Cant', 'Subt']], body: carrito.map(i=>[i.nombre, i.cant, i.subt.toFixed(2)]), startY: 50 });
   doc.save(`Factura_${cli}.pdf`);
 }
 
 function descargarExcel() {
   const f = document.getElementById('filtro-fecha').value;
-  let csv = "Cliente,Producto,Venta,Ganancia,Estado\n";
-  document.querySelectorAll("#tabla-admin-body tr").forEach(tr => {
-    let row = [];
-    tr.querySelectorAll("td").forEach(td => row.push(td.innerText.replace(/L\./g, "")));
-    csv += row.join(",") + "\n";
-  });
+  let csv = "Venta Total,Ganancia Total,40%,20%\n";
+  csv += `${document.getElementById('c-venta').innerText},${document.getElementById('c-ganancia').innerText},${document.getElementById('c-40').innerText},${document.getElementById('c-20').innerText}`;
   const blob = new Blob(["\ufeff" + csv], { type: "text/csv;charset=utf-8;" });
   const link = document.createElement("a");
   link.href = URL.createObjectURL(blob);
